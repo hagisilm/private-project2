@@ -1,20 +1,21 @@
 package com.example.gccoffee1.repository;
 
-import com.example.gccoffee1.model.Order;
-import com.example.gccoffee1.model.OrderItem;
+import com.example.gccoffee1.model.*;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
+import static com.example.gccoffee1.Utils.toLocalDateTime;
+import static com.example.gccoffee1.Utils.toUUID;
 
 @Repository
 public class OrderJdbcRepository implements OrderRepository {
 
-    private final NamedParameterJdbcTemplate jdbcTemplate;
+    private NamedParameterJdbcTemplate jdbcTemplate;
 
     public OrderJdbcRepository(NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -34,11 +35,36 @@ public class OrderJdbcRepository implements OrderRepository {
         return order;
     }
 
+    @Override
+    public List<Order> findByEmail(String email) {
+        return jdbcTemplate.query("select * from orders where email = :email",
+                Collections.singletonMap("email",email.toString()),
+                orderRowMapper);
+
+    }
+
+    @Override
+    public List<Order> findAll() {
+        return jdbcTemplate.query("select * from orders", orderRowMapper);
+    }
+
+    private static final RowMapper<Order> orderRowMapper = (resultSet, i) -> {
+        var orderId = toUUID(resultSet.getBytes("order_id"));
+        var email = resultSet.getString("email");
+        var address = resultSet.getString("address");
+        var postcode = resultSet.getString("postcode");
+        var orderStatus =OrderStatus.valueOf(resultSet.getString("order_status"));
+        var createdAt = toLocalDateTime(resultSet.getTimestamp("created_at"));
+        var updatedAt = toLocalDateTime(resultSet.getTimestamp("updated_at"));
+
+        return new Order(orderId, email, address, postcode, orderStatus, createdAt, updatedAt);
+    };
+
 
     private Map<String, Object> toOrderParamMap(Order order) {
         var paramMap = new HashMap<String, Object>();
         paramMap.put("orderId",order.getOrderId().toString().getBytes());
-        paramMap.put("email", order.getEmail().getAddress());
+        paramMap.put("email", order.getEmail());
         paramMap.put("address",order.getAddress());
         paramMap.put("postcode",order.getPostcode());
         paramMap.put("orderStatus",order.getOrderStatus().toString());

@@ -1,12 +1,12 @@
 package com.example.gccoffee1.controller.api;
 
 import com.example.gccoffee1.controller.CreateOrderRequest;
-import com.example.gccoffee1.model.Email;
 import com.example.gccoffee1.model.Order;
 import com.example.gccoffee1.service.OrderService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class OrderRestController {
@@ -20,10 +20,16 @@ public class OrderRestController {
     @PostMapping("/api/v1/orders")
     public Order createOrder(@RequestBody CreateOrderRequest orderRequest) {
         return orderService.createOrder(
-                new Email(orderRequest.email()),
+                orderRequest.email(),
                 orderRequest.address(),
                 orderRequest.postcode(),
                 orderRequest.orderItems()
         );
+    }
+    @GetMapping("/api/v1/order")
+    public List<Order> searchItem(@RequestParam Optional<String> email) {
+        return email
+                .map(orderService::getOrdersByEmail)
+                .orElse(orderService.getAllOrders());
     }
 }

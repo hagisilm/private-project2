@@ -1,6 +1,5 @@
 package com.example.gccoffee1.service;
 
-import com.example.gccoffee1.model.Email;
 import com.example.gccoffee1.model.Order;
 import com.example.gccoffee1.model.OrderItem;
 import com.example.gccoffee1.model.OrderStatus;
@@ -21,7 +20,7 @@ public class DefaultOrderService implements OrderService {
     }
 
     @Override
-    public Order createOrder(Email email, String address, String postcode, List<OrderItem> orderItems) {
+    public Order createOrder(String email, String address, String postcode, List<OrderItem> orderItems) {
         Order order = new Order(
                 UUID.randomUUID(),
                 email,
@@ -32,5 +31,15 @@ public class DefaultOrderService implements OrderService {
                 LocalDateTime.now(),
                 LocalDateTime.now());
         return orderRepository.insert(order);
+    }
+
+    @Override
+    public List<Order> getOrdersByEmail(String email) {
+        return orderRepository.findByEmail(email);
+    }
+
+    @Override
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
     }
 }
